@@ -24,17 +24,31 @@ function rowToMenuItem(row: any): MenuItem {
   };
 }
 
-function menuItemToRow(item: Partial<Omit<MenuItem, "id">>) {
-  const row: Record<string, unknown> = {};
-  if (item.name         !== undefined) row.name          = item.name;
-  if (item.description  !== undefined) row.description   = item.description;
-  if (item.price        !== undefined) row.price         = item.price;
-  if (item.category     !== undefined) row.category      = item.category;
-  if (item.imageUrl     !== undefined) row.image_url     = item.imageUrl;
-  if (item.type         !== undefined) row.type          = item.type;
+function menuItemToRow(item: Omit<MenuItem, "id">) {
+  return {
+    name: item.name,
+    description: item.description,
+    price: item.price,
+    category: item.category,
+    image_url: item.imageUrl || null,
+    type: item.type,
+    is_bestseller: item.isBestseller,
+    is_spicy: item.isSpicy,
+    in_stock: item.inStock,
+  };
+}
+
+function menuItemToRowPartial(item: Partial<Omit<MenuItem, "id">>) {
+  const row: any = {};
+  if (item.name !== undefined) row.name = item.name;
+  if (item.description !== undefined) row.description = item.description;
+  if (item.price !== undefined) row.price = item.price;
+  if (item.category !== undefined) row.category = item.category;
+  if (item.imageUrl !== undefined) row.image_url = item.imageUrl || null;
+  if (item.type !== undefined) row.type = item.type;
   if (item.isBestseller !== undefined) row.is_bestseller = item.isBestseller;
-  if (item.isSpicy      !== undefined) row.is_spicy      = item.isSpicy;
-  if (item.inStock      !== undefined) row.in_stock      = item.inStock;
+  if (item.isSpicy !== undefined) row.is_spicy = item.isSpicy;
+  if (item.inStock !== undefined) row.in_stock = item.inStock;
   return row;
 }
 
@@ -97,7 +111,7 @@ export async function addMenuItem(item: Omit<MenuItem, "id">): Promise<string> {
 export async function updateMenuItem(id: string, item: Partial<Omit<MenuItem, "id">>): Promise<void> {
   const { error } = await sb()
     .from("menu_items")
-    .update(menuItemToRow(item))
+    .update(menuItemToRowPartial(item))
     .eq("id", id);
   if (error) throw error;
 }
@@ -169,10 +183,10 @@ export async function addOffer(offer: Omit<Offer, "id">): Promise<string> {
 }
 
 export async function updateOffer(id: string, offer: Partial<Omit<Offer, "id">>): Promise<void> {
-  const row: Record<string, unknown> = {};
-  if (offer.text     !== undefined) row.text       = offer.text;
-  if (offer.isActive !== undefined) row.is_active  = offer.isActive;
-  if (offer.order    !== undefined) row.sort_order = offer.order;
+  const row: any = {};
+  if (offer.text !== undefined) row.text = offer.text;
+  if (offer.isActive !== undefined) row.is_active = offer.isActive;
+  if (offer.order !== undefined) row.sort_order = offer.order;
   const { error } = await sb().from("offers").update(row).eq("id", id);
   if (error) throw error;
 }
