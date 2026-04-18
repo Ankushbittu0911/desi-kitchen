@@ -8,21 +8,20 @@ import { signOut } from "@/lib/supabase/db";
 import {
   getMenuItems, addMenuItem, updateMenuItem, deleteMenuItem,
   getAllOffers, addOffer, updateOffer, deleteOffer,
-  getOrders, updateOrderStatus, deleteOrder,
   getSettings, updateSettings,
   uploadFoodImage, deleteFoodImage,
 } from "@/lib/supabase/db";
-import { MenuItem, Offer, Order, SiteSettings } from "@/types";
+import { MenuItem, Offer, SiteSettings } from "@/types";
 import { seedMenuItems, seedSettings, seedOffers, CATEGORIES_MAP } from "@/lib/seedData";
 import {
   LayoutDashboard, UtensilsCrossed, Tag, Settings,
-  ShoppingBag, Plus, Pencil, Trash2, X, Check, LogOut,
-  Package, MessageCircle, Phone, ImagePlus, Loader2,
+  Plus, Pencil, Trash2, X, Check, LogOut,
+  MessageCircle, Phone, Package, ImagePlus, Loader2,
 } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
 
-type Tab = "dashboard" | "menu" | "offers" | "orders" | "settings";
+type Tab = "dashboard" | "menu" | "offers" | "settings";
 
 const EMPTY_ITEM: Omit<MenuItem, "id"> = {
   name: "", description: "", price: 0, category: "main-course",
@@ -37,7 +36,6 @@ export default function AdminDashboard() {
   // ── Data state ──────────────────────────────────────────────────────────
   const [menuItems,    setMenuItems]    = useState<MenuItem[]>([]);
   const [offers,       setOffers]       = useState<Offer[]>([]);
-  const [orders,       setOrders]       = useState<Order[]>([]);
   const [settings,     setSettingsState] = useState<SiteSettings>(seedSettings);
   const [loadingData,  setLoadingData]  = useState(true);
 
@@ -61,12 +59,10 @@ export default function AdminDashboard() {
     Promise.all([
       getMenuItems().catch(() => seedMenuItems.map((m, i) => ({ ...m, id: `s-${i}` }))),
       getAllOffers().catch(()  => seedOffers.map((o, i) => ({ ...o, id: `o-${i}` }))),
-      getOrders().catch(()    => [] as Order[]),
       getSettings().catch(()  => seedSettings),
-    ]).then(([items, offs, ords, sett]) => {
+    ]).then(([items, offs, sett]) => {
       setMenuItems(items);
       setOffers(offs);
-      setOrders(ords);
       setSettingsState(sett);
       setLoadingData(false);
     });
@@ -212,18 +208,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const deleteOrderItem = async (id: string) => {
-    if (!confirm("Delete this order?")) return;
-    try {
-      await deleteOrder(id);
-      setOrders(prev => prev.filter(o => o.id !== id));
-      toast.success("Order deleted");
-    } catch (err: any) {
-      toast.error(err?.message ?? "Failed to delete order");
-      console.error("Delete order failed:", err);
-    }
-  };
-
   // ── Settings ─────────────────────────────────────────────────────────────
   const saveSettings = async () => {
     setSaving(true);
@@ -255,7 +239,6 @@ export default function AdminDashboard() {
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "menu",      label: "Menu",      icon: UtensilsCrossed },
     { id: "offers",    label: "Offers",    icon: Tag },
-    { id: "orders",    label: "Orders",    icon: ShoppingBag },
     { id: "settings",  label: "Settings",  icon: Settings },
   ] as const;
 
@@ -356,7 +339,6 @@ export default function AdminDashboard() {
               {[
                 { label: "Menu Items",    val: menuItems.length,                          icon: "🍛", color: "saffron" },
                 { label: "Active Offers", val: offers.filter(o => o.isActive).length,     icon: "🏷️", color: "gold"    },
-                { label: "Total Orders",  val: orders.length,                             icon: "📦", color: "green"   },
                 { label: "Out of Stock",  val: menuItems.filter(m => !m.inStock).length,  icon: "⚠️", color: "red"     },
               ].map(s => (
                 <motion.div
@@ -373,48 +355,7 @@ export default function AdminDashboard() {
               ))}
             </div>
 
-            {/* Recent orders */}
-            <div className="glass rounded-2xl border border-white/5 overflow-hidden">
-              <div className="p-4 border-b border-white/5 flex items-center justify-between">
-                <h3 className="text-white font-semibold text-sm">Recent Orders</h3>
-                <button onClick={() => setTab("orders")} className="text-saffron-400 text-xs hover:text-saffron-300 transition-colors">
-                  View all →
-                </button>
-              </div>
-              {orders.length === 0 ? (
-                <div className="p-10 text-center">
-                  <div className="text-4xl mb-3">📭</div>
-                  <p className="text-white/30 text-sm">No orders yet</p>
-                </div>
-              ) : (
-                <div className="divide-y divide-white/5">
-                  {orders.slice(0, 5).map(order => (
-                    <div key={order.id} className="p-4 flex items-center justify-between hover:bg-white/2 transition-colors">
-                      <div>
-                        <p className="text-white text-sm font-medium">
-                          {Array.isArray(order.items) ? order.items.length : 0} item(s)
-                        </p>
-                        <p className="text-white/30 text-xs mt-0.5">
-                          {order.timestamp ? new Date(order.timestamp as string).toLocaleString("en-IN") : "—"}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-saffron-400 font-semibold">₹{order.total}</p>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${
-                          order.status === "delivered"
-                            ? "bg-green-500/10 text-green-400 border-green-500/20"
-                            : order.status === "confirmed"
-                            ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
-                            : "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
-                        }`}>
-                          {order.status}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+
 
             {/* Supabase badge */}
             <div className="mt-6 flex items-center gap-2 text-white/20 text-xs">
@@ -559,88 +500,6 @@ export default function AdminDashboard() {
                 </motion.div>
               ))}
             </div>
-          </motion.div>
-        )}
-
-        {/* ━━━ ORDERS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-        {tab === "orders" && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <h1 className="text-white text-2xl font-bold mb-1" style={{ fontFamily: "Cormorant Garamond, serif" }}>
-              Orders
-            </h1>
-            <p className="text-white/30 text-sm mb-6">{orders.length} total orders saved from WhatsApp</p>
-
-            {orders.length === 0 ? (
-              <div className="glass rounded-2xl p-16 border border-white/5 text-center">
-                <div className="text-5xl mb-4">📦</div>
-                <p className="text-white/40 text-sm">No orders yet. They'll appear here once customers order via WhatsApp.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {orders.map(order => (
-                  <motion.div
-                    key={order.id}
-                    className="glass rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-all"
-                    layout
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <p className="text-white/40 text-xs font-mono">
-                          #{(order.id ?? "").slice(-8).toUpperCase()}
-                        </p>
-                        <p className="text-white/30 text-xs mt-0.5">
-                          {order.timestamp ? new Date(order.timestamp as string).toLocaleString("en-IN") : "—"}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {/* Status selector */}
-                        <select
-                          value={order.status}
-                          onChange={async e => {
-                            const newStatus = e.target.value as Order["status"];
-                            try {
-                              await updateOrderStatus(order.id!, newStatus);
-                              setOrders(prev =>
-                                prev.map(o => o.id === order.id ? { ...o, status: newStatus } : o)
-                              );
-                              toast.success("Status updated");
-                            } catch { toast.error("Failed"); }
-                          }}
-                          className={`text-xs px-2 py-1 rounded-full border bg-transparent cursor-pointer focus:outline-none ${
-                            order.status === "delivered"
-                              ? "border-green-500/30 text-green-400"
-                              : order.status === "confirmed"
-                              ? "border-blue-500/30 text-blue-400"
-                              : "border-yellow-500/30 text-yellow-400"
-                          }`}
-                        >
-                          <option value="pending">pending</option>
-                          <option value="confirmed">confirmed</option>
-                          <option value="delivered">delivered</option>
-                        </select>
-                        <button
-                          onClick={() => deleteOrderItem(order.id!)}
-                          className="text-white/30 hover:text-red-400 transition-colors p-1.5 rounded-lg"
-                          aria-label="Delete order"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                        <p className="text-saffron-400 font-bold">₹{order.total}</p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1 border-t border-white/5 pt-3">
-                      {(Array.isArray(order.items) ? order.items : []).map((ci: any, idx: number) => (
-                        <div key={idx} className="flex items-center justify-between text-xs">
-                          <span className="text-white/50">{ci.quantity}× {ci.item?.name ?? "Item"}</span>
-                          <span className="text-white/30">₹{(ci.item?.price ?? 0) * (ci.quantity ?? 1)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
           </motion.div>
         )}
 

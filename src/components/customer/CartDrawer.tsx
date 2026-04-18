@@ -13,12 +13,13 @@ export default function CartDrawer() {
 
   const generateWhatsAppMessage = () => {
     if (state.items.length === 0) return;
+    const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919876543210";
     const lines = state.items.map((ci) => `${ci.quantity} x ${ci.item.name} — ₹${ci.item.price * ci.quantity}`).join("\n");
     const msg = encodeURIComponent(
       `Hello Desi Kitchen, I want to place an order:\n\n${lines}\n\nTotal: ₹${total}\n\nName: \nAddress: \nPayment Mode: `
     );
     saveOrder({ items: state.items, total, timestamp: new Date().toISOString(), status: "pending" });
-    window.open(`https://wa.me/${seedSettings.whatsappNumber}?text=${msg}`, "_blank");
+    window.open(`https://wa.me/${whatsappNumber}?text=${msg}`, "_blank");
     closeCart();
   };
 

@@ -12,7 +12,7 @@ export default function FloatingButtons() {
     <>
       {/* WhatsApp floating button */}
       <motion.a
-        href={`https://wa.me/${seedSettings.whatsappNumber}`}
+        href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919876543210"}`}
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-24 right-4 md:bottom-8 md:right-6 z-40 w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg hover:shadow-green-500/40 hover:scale-110 transition-all"

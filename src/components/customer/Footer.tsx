@@ -30,7 +30,7 @@ export default function Footer({ settings }: Props) {
             </p>
             <div className="flex gap-3">
               <a
-                href={`https://wa.me/${s.whatsappNumber}`}
+                href={`https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919876543210"}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 bg-green-600/10 border border-green-500/30 text-green-400 hover:bg-green-600/20 transition-all px-4 py-2 rounded-full text-sm"

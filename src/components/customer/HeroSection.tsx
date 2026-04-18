@@ -22,7 +22,8 @@ export default function HeroSection() {
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   const handleWhatsApp = () => {
-    window.open(`https://wa.me/${seedSettings.whatsappNumber}?text=Hello+Desi+Kitchen!+I'd+like+to+place+an+order+🙏`, "_blank");
+    const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919876543210";
+    window.open(`https://wa.me/${whatsappNumber}?text=Hello+Desi+Kitchen!+I'd+like+to+place+an+order+🙏`, "_blank");
   };
 
   return (
